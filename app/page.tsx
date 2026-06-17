@@ -444,7 +444,7 @@ export default function SurveyPage() {
           <BackIcon />
         </button>
         <div className="prog"><div className="prog-fill" style={{ width: `${progress}%` }} /></div>
-        <img className="brand-mono" src={LOGO} alt="TMS" style={isHero ? { filter: LOGO_FILTER_WHITE } : undefined} />
+        <img className="brand-mono" src={LOGO} alt="TMS" />
       </header>
 
       {/* ── Intro ────────────────────────────────────────────────────────── */}
@@ -452,7 +452,7 @@ export default function SurveyPage() {
         <>
           <main className="screen">
             <div className="wrap reveal">
-              <img className="hero-mono" src={LOGO} alt="TMS" style={{ filter: LOGO_FILTER_WHITE }} />
+              <img className="hero-mono" src={LOGO} alt="TMS" />
               <p className="eyebrow" style={{ color:'var(--teal)' }}>Strategische positionering &middot; Treacy &amp; Wiersema</p>
               <h1 className="q">Positioneringssurvey</h1>
               <p className="help">Leg v&oacute;&oacute;r de werksessie individueel vast waar TMS volgens jou staat en waar we naartoe moeten. Er zijn geen juiste of foute antwoorden &mdash; net de verschillen tussen ons maken het gesprek waardevol.</p>
