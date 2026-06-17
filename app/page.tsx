@@ -45,8 +45,8 @@ const PART: Record<string, { name: string; color: string }> = {
   D: { name: 'Deel D \u00b7 Afstemming',                color: '#8FAE73' },
 }
 
-const MONO_R = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjggNDYiPjxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSI0NiIgcng9IjMiIGZpbGw9IiMwOTIxNDciLz48cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMzIiIGhlaWdodD0iMTAiIHJ4PSIzIiBmaWxsPSIjMDkyMTQ3Ii8+PHJlY3QgeD0iMTEiIHk9IjAiIHdpZHRoPSIxMCIgaGVpZ2h0PSI0NiIgcng9IjAiIGZpbGw9IiMwOTIxNDciLz48cmVjdCB4PSI0MCIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQ2IiByeD0iMCIgZmlsbD0iIzA5MjE0NyIvPjxyZWN0IHg9IjQwIiB5PSIwIiB3aWR0aD0iNDYiIGhlaWdodD0iMTAiIHJ4PSIwIiBmaWxsPSIjMDkyMTQ3Ii8+PHBvbHlnb24gcG9pbnRzPSI0MCwwIDUwLDAgNzQsMjMgOTgsMCAxMDgsMCAxMDgsNDYgOTgsNDYgOTgsMTggNzQsNDAgNTAsMTggNTAsNDYgNDAsNDYiIGZpbGw9IiMwOTIxNDciLz48cmVjdCB4PSIxMTgiIHk9IjAiIHdpZHRoPSI1MCIgaGVpZ2h0PSIxMCIgcng9IjAiIGZpbGw9IiMwOTIxNDciLz48cmVjdCB4PSIxMTgiIHk9IjAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIyOCIgcng9IjAiIGZpbGw9IiMwOTIxNDciLz48cmVjdCB4PSIxMTgiIHk9IjE4IiB3aWR0aD0iNTAiIGhlaWdodD0iMTAiIHJ4PSIwIiBmaWxsPSIjMDkyMTQ3Ii8+PHJlY3QgeD0iMTU4IiB5PSIxOCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjI4IiByeD0iMCIgZmlsbD0iIzA5MjE0NyIvPjxyZWN0IHg9IjExOCIgeT0iMzYiIHdpZHRoPSI1MCIgaGVpZ2h0PSIxMCIgcng9IjAiIGZpbGw9IiMwOTIxNDciLz48L3N2Zz4='
-const MONO_W = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjggNDYiPjxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSI0NiIgcng9IjMiIGZpbGw9IiNGRkZGRkYiLz48cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMzIiIGhlaWdodD0iMTAiIHJ4PSIzIiBmaWxsPSIjRkZGRkZGIi8+PHJlY3QgeD0iMTEiIHk9IjAiIHdpZHRoPSIxMCIgaGVpZ2h0PSI0NiIgcng9IjAiIGZpbGw9IiNGRkZGRkYiLz48cmVjdCB4PSI0MCIgeT0iMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQ2IiByeD0iMCIgZmlsbD0iI0ZGRkZGRiIvPjxyZWN0IHg9IjQwIiB5PSIwIiB3aWR0aD0iNDYiIGhlaWdodD0iMTAiIHJ4PSIwIiBmaWxsPSIjRkZGRkZGIi8+PHBvbHlnb24gcG9pbnRzPSI0MCwwIDUwLDAgNzQsMjMgOTgsMCAxMDgsMCAxMDgsNDYgOTgsNDYgOTgsMTggNzQsNDAgNTAsMTggNTAsNDYgNDAsNDYiIGZpbGw9IiNGRkZGRkYiLz48cmVjdCB4PSIxMTgiIHk9IjAiIHdpZHRoPSI1MCIgaGVpZ2h0PSIxMCIgcng9IjAiIGZpbGw9IiNGRkZGRkYiLz48cmVjdCB4PSIxMTgiIHk9IjAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIyOCIgcng9IjAiIGZpbGw9IiNGRkZGRkYiLz48cmVjdCB4PSIxMTgiIHk9IjE4IiB3aWR0aD0iNTAiIGhlaWdodD0iMTAiIHJ4PSIwIiBmaWxsPSIjRkZGRkZGIi8+PHJlY3QgeD0iMTU4IiB5PSIxOCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjI4IiByeD0iMCIgZmlsbD0iI0ZGRkZGRiIvPjxyZWN0IHg9IjExOCIgeT0iMzYiIHdpZHRoPSI1MCIgaGVpZ2h0PSIxMCIgcng9IjAiIGZpbGw9IiNGRkZGRkYiLz48L3N2Zz4='
+const LOGO = '/tms-logo.png'
+const LOGO_FILTER_WHITE = 'brightness(0) invert(1)'
 
 // ── Small SVG icon components ──────────────────────────────────────────────
 function CheckIcon() {
@@ -444,7 +444,7 @@ export default function SurveyPage() {
           <BackIcon />
         </button>
         <div className="prog"><div className="prog-fill" style={{ width: `${progress}%` }} /></div>
-        <img className="brand-mono" src={isHero ? MONO_W : MONO_R} alt="TMS" />
+        <img className="brand-mono" src={LOGO} alt="TMS" style={isHero ? { filter: LOGO_FILTER_WHITE } : undefined} />
       </header>
 
       {/* ── Intro ────────────────────────────────────────────────────────── */}
@@ -452,7 +452,7 @@ export default function SurveyPage() {
         <>
           <main className="screen">
             <div className="wrap reveal">
-              <img className="hero-mono" src={MONO_W} alt="TMS" />
+              <img className="hero-mono" src={LOGO} alt="TMS" style={{ filter: LOGO_FILTER_WHITE }} />
               <p className="eyebrow" style={{ color:'var(--teal)' }}>Strategische positionering &middot; Treacy &amp; Wiersema</p>
               <h1 className="q">Positioneringssurvey</h1>
               <p className="help">Leg v&oacute;&oacute;r de werksessie individueel vast waar TMS volgens jou staat en waar we naartoe moeten. Er zijn geen juiste of foute antwoorden &mdash; net de verschillen tussen ons maken het gesprek waardevol.</p>
@@ -486,7 +486,7 @@ export default function SurveyPage() {
         <>
           <main className="screen">
             <div className="wrap reveal" style={{ textAlign:'center' }}>
-              <img className="hero-mono" src={MONO_W} alt="TMS" style={{ marginInline:'auto' }} />
+              <img className="hero-mono" src={LOGO} alt="TMS" style={{ marginInline:'auto', filter: LOGO_FILTER_WHITE }} />
               <h1 className="q" style={{ textAlign:'center' }}>Bedankt &mdash; dit is binnen.</h1>
               <p className="help" style={{ marginInline:'auto', textAlign:'center' }}>
                 Je antwoorden zijn klaar. We bespreken de <b style={{ color:'#fff', fontWeight:600 }}>geaggregeerde</b> resultaten samen binnen StratCom.
