@@ -395,7 +395,8 @@ export default function SurveyPage() {
         answers,
       })
       if (error) {
-        setDbStatus({ msg: '\u26a0 Opslaan mislukt \u2013 gebruik "Kopieer" als back-up.', color: '#FF6B6B' })
+        console.error('Supabase insert error:', error.code, error.message, error.details)
+        setDbStatus({ msg: `\u26a0 Opslaan mislukt (${error.code ?? error.message}) \u2013 gebruik "Kopieer" als back-up.`, color: '#FF6B6B' })
       } else {
         setDbStatus({ msg: '\u2713 Antwoorden opgeslagen', color: '#39B2AD' })
       }

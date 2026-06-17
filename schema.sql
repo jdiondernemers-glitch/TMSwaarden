@@ -35,6 +35,13 @@ CREATE TABLE IF NOT EXISTS survey_responses (
 ALTER TABLE questions        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE survey_responses ENABLE ROW LEVEL SECURITY;
 
+-- Drop first so this script is safe to re-run
+DROP POLICY IF EXISTS "questions_select_anon"         ON questions;
+DROP POLICY IF EXISTS "questions_all_authenticated"   ON questions;
+DROP POLICY IF EXISTS "responses_insert_anon"         ON survey_responses;
+DROP POLICY IF EXISTS "responses_select_authenticated" ON survey_responses;
+DROP POLICY IF EXISTS "responses_all_authenticated"   ON survey_responses;
+
 CREATE POLICY "questions_select_anon"
   ON questions FOR SELECT TO anon
   USING (active = true);
@@ -43,13 +50,15 @@ CREATE POLICY "questions_all_authenticated"
   ON questions FOR ALL TO authenticated
   USING (true) WITH CHECK (true);
 
+-- Allow anonymous (public) users to submit survey answers
 CREATE POLICY "responses_insert_anon"
   ON survey_responses FOR INSERT TO anon
   WITH CHECK (true);
 
-CREATE POLICY "responses_select_authenticated"
-  ON survey_responses FOR SELECT TO authenticated
-  USING (true);
+-- Allow authenticated admin to read and manage responses
+CREATE POLICY "responses_all_authenticated"
+  ON survey_responses FOR ALL TO authenticated
+  USING (true) WITH CHECK (true);
 
 -- ── 4. Seed: 16 original questions ────────────────────────
 INSERT INTO questions (q_id, position, part, type, q, help, opts, items, lo, hi, ph, core)
