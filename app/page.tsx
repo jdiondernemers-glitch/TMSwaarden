@@ -9,6 +9,7 @@ import {
   aggregateToSurvey,
   emptyGrid,
   isGridComplete,
+  mergeDimGrids,
   type DimGrid,
 } from '@/lib/dimension-scoring'
 import './survey.css'
@@ -268,7 +269,10 @@ export default function SurveyPage() {
   const [dbStatus, setDbStatus]     = useState<{ msg: string; color: string } | null>(null)
   const savedRef                    = useRef(false)
   const nameInputRef                = useRef<HTMLInputElement>(null)
+  const dimGridsRef                 = useRef(dimGrids)
   const supabase                    = createClient()
+
+  useEffect(() => { dimGridsRef.current = dimGrids }, [dimGrids])
 
   // Load questions
   useEffect(() => {
@@ -321,11 +325,11 @@ export default function SurveyPage() {
     setAnswers(prev => ({ ...prev, [qId]: value }))
   }, [])
 
-  const saveResponse = useCallback(async (payload: Answers, surveyMode: Mode) => {
+  const saveResponse = useCallback(async (payload: Record<string, unknown>, surveyMode: Mode) => {
     setDbStatus({ msg: 'Opslaan in database\u2026', color: 'rgba(255,255,255,.5)' })
     try {
       const { error } = await supabase.from('survey_responses').insert({
-        naam: getRespondentName(payload, questions),
+        naam: getRespondentName(payload as Answers, questions),
         mode: surveyMode,
         answers: payload,
       })
@@ -348,14 +352,17 @@ export default function SurveyPage() {
       if (nextId === 'done' && !savedRef.current) {
         savedRef.current = true
         setAnswers(currentAnswers => {
-          let payload = currentAnswers
+          let answersForState = { ...currentAnswers }
           const nameQ = questions.find(q => q.type === 'name')
           if (nameQ && nameInputRef.current) {
             const val = nameInputRef.current.value.trim()
-            if (val) payload = { ...currentAnswers, [nameQ.q_id]: val }
+            if (val) answersForState = { ...answersForState, [nameQ.q_id]: val }
           }
-          void saveResponse(payload, mode)
-          return payload
+          void saveResponse(
+            { ...answersForState, ...mergeDimGrids(dimGridsRef.current) },
+            mode
+          )
+          return answersForState
         })
       }
 

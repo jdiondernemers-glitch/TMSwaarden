@@ -168,3 +168,12 @@ export function computeLeader(profile: SurveyAlloc): LeaderResult {
 
   return { leader, gap, total, flagText, flagTone, scores: profile }
 }
+
+/** Merge session dim grids into answers JSONB as A1_dims, A2_dims, etc. */
+export function mergeDimGrids(dimGrids: Record<string, DimGrid>): Record<string, DimGrid> {
+  const out: Record<string, DimGrid> = {}
+  for (const [qId, grid] of Object.entries(dimGrids)) {
+    out[`${qId}_dims`] = grid
+  }
+  return out
+}

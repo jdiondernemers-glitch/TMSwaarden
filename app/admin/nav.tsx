@@ -35,6 +35,9 @@ export default function AdminNav({ userEmail }: { userEmail: string }) {
               <Link href="/admin/dashboard" className={linkClass('/admin/dashboard')}>
                 Antwoorden
               </Link>
+              <Link href="/admin/consolidatie" className={linkClass('/admin/consolidatie')}>
+                Consolidatie
+              </Link>
               <Link href="/admin/questions" className={linkClass('/admin/questions')}>
                 Vragen
               </Link>

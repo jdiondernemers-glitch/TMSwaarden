@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS questions (
 );
 
 -- ── 2. Survey responses table (v2 – JSONB answers) ────────
+-- answers JSONB stores per-question values plus optional dimension grids:
+--   A1, A2          → { oe, pl, ki } totals (admin/CSV)
+--   A1_dims, A2_dims → full 5×3 grid { belofte..relatie: { CI, OE, PL } } (consolidatie)
 CREATE TABLE IF NOT EXISTS survey_responses (
   id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at  timestamptz NOT NULL DEFAULT now(),
