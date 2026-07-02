@@ -41,6 +41,7 @@ export default function DashboardPage() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading]     = useState(true)
   const [expanded, setExpanded]   = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -75,6 +76,23 @@ export default function DashboardPage() {
     a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }))
     a.download = `TMS-responses-${new Date().toISOString().slice(0,10)}.csv`
     document.body.appendChild(a); a.click(); document.body.removeChild(a)
+  }
+
+  async function deleteResponse(r: Response) {
+    const label = r.naam || 'Anoniem'
+    if (!window.confirm(`Inzending van "${label}" verwijderen? Dit kan niet ongedaan worden gemaakt.`)) return
+
+    setDeletingId(r.id)
+    const { error } = await supabase.from('survey_responses').delete().eq('id', r.id)
+    setDeletingId(null)
+
+    if (error) {
+      alert(`Verwijderen mislukt: ${error.message}`)
+      return
+    }
+
+    setResponses(prev => prev.filter(x => x.id !== r.id))
+    if (expanded === r.id) setExpanded(null)
   }
 
   if (loading) {
@@ -119,24 +137,38 @@ export default function DashboardPage() {
 
             return (
               <div key={r.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                <button
-                  className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left"
-                  onClick={() => setExpanded(isOpen ? null : r.id)}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="font-semibold text-[#092147] text-sm">{r.naam || 'Anoniem'}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.mode === 'core' ? 'bg-teal-50 text-teal-700' : 'bg-blue-50 text-blue-700'}`}>
-                        {r.mode === 'core' ? 'Korte kern' : 'Volledig'}
-                      </span>
+                <div className="flex items-center gap-2 px-5 py-4 hover:bg-gray-50 transition-colors">
+                  <button
+                    type="button"
+                    className="flex-1 flex items-center gap-4 min-w-0 text-left"
+                    onClick={() => setExpanded(isOpen ? null : r.id)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="font-semibold text-[#092147] text-sm">{r.naam || 'Anoniem'}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.mode === 'core' ? 'bg-teal-50 text-teal-700' : 'bg-blue-50 text-blue-700'}`}>
+                          {r.mode === 'core' ? 'Korte kern' : 'Volledig'}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-400 mt-0.5">{formatDate(r.created_at)}</div>
                     </div>
-                    <div className="text-xs text-gray-400 mt-0.5">{formatDate(r.created_at)}</div>
-                  </div>
-                  <div className="text-xs text-gray-400 shrink-0">{answeredCount} / {questions.length} vragen</div>
-                  <svg className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+                    <div className="text-xs text-gray-400 shrink-0">{answeredCount} / {questions.length} vragen</div>
+                    <svg className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteResponse(r)}
+                    disabled={deletingId === r.id}
+                    aria-label={`Inzending van ${r.naam || 'Anoniem'} verwijderen`}
+                    className="shrink-0 p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
 
                 {isOpen && (
                   <div className="border-t border-gray-100 px-5 py-4">
