@@ -66,12 +66,12 @@ VALUES
 
 ('A1', 1, 'A', 'alloc',
  'Hoe concurreert en wint TMS <em class="k">vandaag</em> écht?',
- 'Verdeel 100 punten over de drie disciplines.',
+ 'Beoordeel vijf dimensies. Verdeel per dimensie 20 punten over de drie uitspraken.',
  NULL, NULL, NULL, NULL, NULL, true),
 
 ('A2', 2, 'A', 'alloc',
  'Hoe zou TMS over <em class="k">3 jaar</em> moeten concurreren?',
- 'Verdeel opnieuw 100 punten — waar willen we in leiden?',
+ 'Beoordeel vijf dimensies. Verdeel per dimensie 20 punten over de drie uitspraken.',
  NULL, NULL, NULL, NULL, NULL, true),
 
 ('A3', 3, 'A', 'single',

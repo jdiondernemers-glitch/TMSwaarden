@@ -4,6 +4,13 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { createClient } from '@/lib/supabase-browser'
+import DimensionAllocInputs from '@/app/components/DimensionAllocInputs'
+import {
+  aggregateToSurvey,
+  emptyGrid,
+  isGridComplete,
+  type DimGrid,
+} from '@/lib/dimension-scoring'
 import './survey.css'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -191,64 +198,6 @@ function RankOpts({ q, answers, setAnswer }: {
   )
 }
 
-function AllocInputs({ q, answers, setAnswer }: {
-  q: Question; answers: Answers
-  setAnswer: (id: string, v: AllocVal) => void
-}) {
-  const a = (answers[q.q_id] as AllocVal | undefined) ?? { oe: '', pl: '', ki: '' }
-  const keys = Object.keys(DISC) as (keyof typeof DISC)[]
-  const total = keys.reduce((s, k) => s + (Number(a[k]) || 0), 0)
-
-  const update = (k: keyof typeof DISC, raw: number | '') => {
-    setAnswer(q.q_id, { ...a, [k]: raw })
-  }
-  const step = (k: keyof typeof DISC, delta: number) => {
-    const v = Math.max(0, Math.min(100, (Number(a[k]) || 0) + delta))
-    update(k, v)
-  }
-
-  return (
-    <>
-      <div className="alloc">
-        {keys.map(k => {
-          const d = DISC[k]
-          const val = a[k]
-          const pct = Math.min(Number(val) || 0, 100)
-          return (
-            <div key={k} className="arow">
-              <div className="top">
-                <span className="dot" style={{ background: d.dot }} />
-                <span className="name">{d.label}</span>
-              </div>
-              <div className="stepper">
-                <button className="sbtn" onClick={() => step(k, -5)} aria-label="min">&minus;</button>
-                <input
-                  className="ninput"
-                  inputMode="numeric"
-                  value={val === '' ? '' : val}
-                  placeholder="0"
-                  maxLength={3}
-                  onChange={e => {
-                    const raw = e.target.value.replace(/[^0-9]/g, '').slice(0, 3)
-                    update(k, raw === '' ? '' : Math.min(100, parseInt(raw)))
-                  }}
-                />
-                <button className="sbtn" onClick={() => step(k, 5)} aria-label="plus">+</button>
-              </div>
-              <div className="abar"><i style={{ width: pct + '%', background: d.dot }} /></div>
-            </div>
-          )
-        })}
-      </div>
-      <div className={`total${total === 100 ? ' ok' : total > 100 ? ' over' : ''}`}>
-        <span>Totaal</span>
-        <span className="badge">{total}</span>
-        <span>/ 100</span>
-      </div>
-    </>
-  )
-}
-
 function ScaleInput({ q, answers, setAnswer, onAdvance }: {
   q: Question; answers: Answers
   setAnswer: (id: string, v: number) => void
@@ -305,6 +254,7 @@ export default function SurveyPage() {
   const [mode, setMode]             = useState<Mode>('full')
   const [pos, setPos]               = useState(0)
   const [answers, setAnswers]       = useState<Answers>({})
+  const [dimGrids, setDimGrids]       = useState<Record<string, DimGrid>>({})
   const [dbStatus, setDbStatus]     = useState<{ msg: string; color: string } | null>(null)
   const savedRef                    = useRef(false)
   const supabase                    = createClient()
@@ -340,12 +290,10 @@ export default function SurveyPage() {
     if (!currentQ) return false
     if (currentQ.type === 'text' || currentQ.type === 'name') return true
     if (currentQ.type === 'alloc') {
-      const a = answers[currentQ.q_id] as AllocVal | undefined
-      if (!a) return false
-      return (Number(a.oe)||0) + (Number(a.pl)||0) + (Number(a.ki)||0) === 100
+      return isGridComplete(dimGrids[currentQ.q_id])
     }
     return hasAnswer(answers, currentQ.q_id)
-  }, [isIntro, isDone, currentQ, answers])
+  }, [isIntro, isDone, currentQ, answers, dimGrids])
 
   // Sync nextEnabled to ref for keyboard handler
   const nextEnabledRef = useRef(nextEnabled)
@@ -385,6 +333,18 @@ export default function SurveyPage() {
   const setAnswer = useCallback((qId: string, value: Answers[string]) => {
     setAnswers(prev => ({ ...prev, [qId]: value }))
   }, [])
+
+  const handleDimGridChange = useCallback((qId: string, grid: DimGrid) => {
+    setDimGrids(prev => ({ ...prev, [qId]: grid }))
+    setAnswer(qId, aggregateToSurvey(grid))
+  }, [setAnswer])
+
+  const currentDimGrid = currentQ?.type === 'alloc'
+    ? (dimGrids[currentQ.q_id] ?? emptyGrid())
+    : null
+  const currentProfile = currentQ?.type === 'alloc'
+    ? aggregateToSurvey(currentDimGrid ?? emptyGrid())
+    : null
 
   async function saveResponse() {
     setDbStatus({ msg: 'Opslaan in database\u2026', color: 'rgba(255,255,255,.5)' })
@@ -516,8 +476,8 @@ export default function SurveyPage() {
       {/* ── Question ─────────────────────────────────────────────────────── */}
       {currentQ && (
         <>
-          <main className="screen" key={currentQ.q_id}>
-            <div className="wrap reveal">
+          <main className={`screen${currentQ.type === 'alloc' ? ' screen-dims' : ''}`} key={currentQ.q_id}>
+            <div className={`wrap reveal${currentQ.type === 'alloc' ? ' wrap-dims' : ''}`}>
               <p className="eyebrow">
                 <span className="qn">{currentQ.q_id.toUpperCase()}</span>
                 {PART[currentQ.part]?.name}
@@ -534,8 +494,12 @@ export default function SurveyPage() {
               {currentQ.type === 'rank' && (
                 <RankOpts q={currentQ} answers={answers} setAnswer={setAnswer} />
               )}
-              {currentQ.type === 'alloc' && (
-                <AllocInputs q={currentQ} answers={answers} setAnswer={setAnswer} />
+              {currentQ.type === 'alloc' && currentProfile && (
+                <DimensionAllocInputs
+                  grid={currentDimGrid ?? emptyGrid()}
+                  profile={currentProfile}
+                  onGridChange={grid => handleDimGridChange(currentQ.q_id, grid)}
+                />
               )}
               {currentQ.type === 'scale' && (
                 <ScaleInput q={currentQ} answers={answers} setAnswer={setAnswer} onAdvance={advance} />
