@@ -36,6 +36,13 @@ function decodeAnswer(val: unknown, q: Question | undefined): string {
 
 const PART_COLORS: Record<string,string> = { A:'#CD0039', B:'#39B2AD', C:'#092147', D:'#8FAE73' }
 
+function displayName(r: Response): string {
+  if (r.naam?.trim()) return r.naam.trim()
+  const fromAnswers = r.answers?.naam
+  if (typeof fromAnswers === 'string' && fromAnswers.trim()) return fromAnswers.trim()
+  return 'Anoniem'
+}
+
 export default function DashboardPage() {
   const [responses, setResponses] = useState<Response[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
@@ -62,7 +69,7 @@ export default function DashboardPage() {
     const rows = responses.map(r => {
       const cols = [
         formatDate(r.created_at),
-        r.naam ?? '',
+        displayName(r),
         r.mode ?? '',
         ...qIds.map(id => {
           const q = questions.find(q => q.q_id === id)
@@ -79,7 +86,7 @@ export default function DashboardPage() {
   }
 
   async function deleteResponse(r: Response) {
-    const label = r.naam || 'Anoniem'
+    const label = displayName(r)
     if (!window.confirm(`Inzending van "${label}" verwijderen? Dit kan niet ongedaan worden gemaakt.`)) return
 
     setDeletingId(r.id)
@@ -145,7 +152,7 @@ export default function DashboardPage() {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 flex-wrap">
-                        <span className="font-semibold text-[#092147] text-sm">{r.naam || 'Anoniem'}</span>
+                        <span className="font-semibold text-[#092147] text-sm">{displayName(r)}</span>
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.mode === 'core' ? 'bg-teal-50 text-teal-700' : 'bg-blue-50 text-blue-700'}`}>
                           {r.mode === 'core' ? 'Korte kern' : 'Volledig'}
                         </span>
@@ -161,7 +168,7 @@ export default function DashboardPage() {
                     type="button"
                     onClick={() => deleteResponse(r)}
                     disabled={deletingId === r.id}
-                    aria-label={`Inzending van ${r.naam || 'Anoniem'} verwijderen`}
+                    aria-label={`Inzending van ${displayName(r)} verwijderen`}
                     className="shrink-0 p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

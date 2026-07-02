@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo, type RefObject } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import DimensionAllocInputs from '@/app/components/DimensionAllocInputs'
 import {
@@ -92,9 +92,17 @@ function hasAnswer(answers: Answers, id: string): boolean {
   return String(v).trim() !== ''
 }
 
+function getRespondentName(answers: Answers, questions: Question[]): string | null {
+  const nameQ = questions.find(q => q.type === 'name')
+  const key = nameQ?.q_id ?? 'naam'
+  const v = answers[key]
+  if (typeof v === 'string' && v.trim()) return v.trim()
+  return null
+}
+
 function buildOutput(questions: Question[], mode: Mode, answers: Answers): string {
   const qs = questions.filter(q => mode === 'full' || q.core)
-  const L: string[] = ['TMS \u00b7 Positioneringssurvey \u2014 antwoorden', 'Naam / rol: ' + (answers.naam || '\u2014'), '']
+  const L: string[] = ['TMS \u00b7 Positioneringssurvey \u2014 antwoorden', 'Naam / rol: ' + (getRespondentName(answers, questions) || '\u2014'), '']
   for (const q of qs) {
     if (q.type === 'name') continue
     const ans = answers[q.q_id]
@@ -233,12 +241,14 @@ function TextInput({ q, answers, setAnswer }: {
   )
 }
 
-function NameInput({ q, answers, setAnswer }: {
+function NameInput({ q, answers, setAnswer, inputRef }: {
   q: Question; answers: Answers
   setAnswer: (id: string, v: string) => void
+  inputRef?: RefObject<HTMLInputElement | null>
 }) {
   return (
     <input
+      ref={inputRef}
       className="tinput"
       placeholder={q.ph ?? ''}
       value={(answers[q.q_id] as string) ?? ''}
@@ -257,6 +267,7 @@ export default function SurveyPage() {
   const [dimGrids, setDimGrids]       = useState<Record<string, DimGrid>>({})
   const [dbStatus, setDbStatus]     = useState<{ msg: string; color: string } | null>(null)
   const savedRef                    = useRef(false)
+  const nameInputRef                = useRef<HTMLInputElement>(null)
   const supabase                    = createClient()
 
   // Load questions
@@ -306,9 +317,51 @@ export default function SurveyPage() {
     document.documentElement.style.setProperty('--accent-soft', `rgba(${hexRGB(color)},.09)`)
   }, [currentId, questions])
 
+  const setAnswer = useCallback((qId: string, value: Answers[string]) => {
+    setAnswers(prev => ({ ...prev, [qId]: value }))
+  }, [])
+
+  const saveResponse = useCallback(async (payload: Answers, surveyMode: Mode) => {
+    setDbStatus({ msg: 'Opslaan in database\u2026', color: 'rgba(255,255,255,.5)' })
+    try {
+      const { error } = await supabase.from('survey_responses').insert({
+        naam: getRespondentName(payload, questions),
+        mode: surveyMode,
+        answers: payload,
+      })
+      if (error) {
+        console.error('Supabase insert error:', error.code, error.message, error.details)
+        setDbStatus({ msg: `\u26a0 Opslaan mislukt (${error.code ?? error.message}) \u2013 gebruik "Kopieer" als back-up.`, color: '#FF6B6B' })
+      } else {
+        setDbStatus({ msg: '\u2713 Antwoorden opgeslagen', color: '#39B2AD' })
+      }
+    } catch {
+      setDbStatus({ msg: '\u26a0 Opslaan mislukt \u2013 gebruik "Kopieer" als back-up.', color: '#FF6B6B' })
+    }
+  }, [questions, supabase])
+
   const advance = useCallback(() => {
-    setPos(p => Math.min(p + 1, screens.length - 1))
-  }, [screens.length])
+    setPos(currentPos => {
+      const nextPos = Math.min(currentPos + 1, screens.length - 1)
+      const nextId = screens[nextPos]
+
+      if (nextId === 'done' && !savedRef.current) {
+        savedRef.current = true
+        setAnswers(currentAnswers => {
+          let payload = currentAnswers
+          const nameQ = questions.find(q => q.type === 'name')
+          if (nameQ && nameInputRef.current) {
+            const val = nameInputRef.current.value.trim()
+            if (val) payload = { ...currentAnswers, [nameQ.q_id]: val }
+          }
+          void saveResponse(payload, mode)
+          return payload
+        })
+      }
+
+      return nextPos
+    })
+  }, [screens, questions, mode, saveResponse])
 
   // Keyboard: Enter to advance
   useEffect(() => {
@@ -321,19 +374,6 @@ export default function SurveyPage() {
     return () => document.removeEventListener('keydown', handler)
   }, [advance])
 
-  // Save once when done screen is reached
-  useEffect(() => {
-    if (isDone && !savedRef.current) {
-      savedRef.current = true
-      saveResponse()
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDone])
-
-  const setAnswer = useCallback((qId: string, value: Answers[string]) => {
-    setAnswers(prev => ({ ...prev, [qId]: value }))
-  }, [])
-
   const handleDimGridChange = useCallback((qId: string, grid: DimGrid) => {
     setDimGrids(prev => ({ ...prev, [qId]: grid }))
     setAnswer(qId, aggregateToSurvey(grid))
@@ -345,25 +385,6 @@ export default function SurveyPage() {
   const currentProfile = currentQ?.type === 'alloc'
     ? aggregateToSurvey(currentDimGrid ?? emptyGrid())
     : null
-
-  async function saveResponse() {
-    setDbStatus({ msg: 'Opslaan in database\u2026', color: 'rgba(255,255,255,.5)' })
-    try {
-      const { error } = await supabase.from('survey_responses').insert({
-        naam: (answers.naam as string) || null,
-        mode,
-        answers,
-      })
-      if (error) {
-        console.error('Supabase insert error:', error.code, error.message, error.details)
-        setDbStatus({ msg: `\u26a0 Opslaan mislukt (${error.code ?? error.message}) \u2013 gebruik "Kopieer" als back-up.`, color: '#FF6B6B' })
-      } else {
-        setDbStatus({ msg: '\u2713 Antwoorden opgeslagen', color: '#39B2AD' })
-      }
-    } catch {
-      setDbStatus({ msg: '\u26a0 Opslaan mislukt \u2013 gebruik "Kopieer" als back-up.', color: '#FF6B6B' })
-    }
-  }
 
   function doCopy(btn: HTMLButtonElement) {
     const txt = buildOutput(questions, mode, answers)
@@ -383,7 +404,7 @@ export default function SurveyPage() {
     const txt = buildOutput(questions, mode, answers)
     const a = document.createElement('a')
     a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain' }))
-    a.download = 'TMS-survey-' + ((answers.naam as string || 'antwoord').replace(/[^a-z0-9]+/gi,'-').toLowerCase()) + '.txt'
+    a.download = 'TMS-survey-' + ((getRespondentName(answers, questions) || 'antwoord').replace(/[^a-z0-9]+/gi,'-').toLowerCase()) + '.txt'
     document.body.appendChild(a); a.click(); document.body.removeChild(a)
   }
 
@@ -508,7 +529,7 @@ export default function SurveyPage() {
                 <TextInput q={currentQ} answers={answers} setAnswer={setAnswer} />
               )}
               {currentQ.type === 'name' && (
-                <NameInput q={currentQ} answers={answers} setAnswer={setAnswer} />
+                <NameInput q={currentQ} answers={answers} setAnswer={setAnswer} inputRef={nameInputRef} />
               )}
             </div>
           </main>
