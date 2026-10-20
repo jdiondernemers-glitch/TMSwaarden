@@ -217,7 +217,7 @@ textarea:focus{border-color:var(--navy)}
 .dims-breakdown-short{width:72px;font-size:.68rem;color:var(--lightblue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}
 .dims-breakdown-bar{flex:1;height:8px;background:rgba(255,255,255,.12);border-radius:5px;display:flex;overflow:hidden}
 .dims-breakdown-seg{height:100%;transition:width .28s cubic-bezier(.4,0,.2,1)}
-.dims-profile-note{font-size:.68rem;color:var(--grey);line-height:1.45;margin-top:11px;margin-bottom:0}
+.dims-profile-note{font-size:.68rem;color:var(--lightblue);line-height:1.45;margin-top:11px;margin-bottom:0;opacity:.95}
 @media (max-width:900px){
   .dims-layout{flex-direction:column}
   .dims-profile{position:static;flex-basis:auto;width:100%}
