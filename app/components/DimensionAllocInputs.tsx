@@ -18,6 +18,7 @@ import {
 interface Props {
   grid: DimGrid
   profile: SurveyAlloc
+  profileTitle?: string
   onGridChange: (grid: DimGrid) => void
 }
 
@@ -28,7 +29,7 @@ const FLAG_COLORS = {
   muted: 'var(--lightblue)',
 } as const
 
-export default function DimensionAllocInputs({ grid, profile, onGridChange }: Props) {
+export default function DimensionAllocInputs({ grid, profile, profileTitle = 'Jouw TMS-profiel', onGridChange }: Props) {
   const leaderInfo = useMemo(() => computeLeader(profile), [profile])
 
   const handleSetVal = (dimKey: DimKey, discKey: DiscKey, value: number) => {
@@ -119,7 +120,7 @@ export default function DimensionAllocInputs({ grid, profile, onGridChange }: Pr
       <aside className="dims-profile" aria-live="polite">
         <div className="dims-profile-inner">
           <div className="dims-profile-head">
-            <span className="dims-profile-title">Jouw TMS-profiel</span>
+            <span className="dims-profile-title">{profileTitle}</span>
             <span className={`dims-profile-total${leaderInfo.total === 100 ? ' ok' : ''}`}>
               {leaderInfo.total}/100
             </span>

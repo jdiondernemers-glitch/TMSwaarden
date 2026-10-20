@@ -6,7 +6,8 @@
 -- ── 1. Questions table ────────────────────────────────────
 CREATE TABLE IF NOT EXISTS questions (
   id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  q_id        text        UNIQUE NOT NULL,
+  q_id        text        NOT NULL,
+  company     text        NOT NULL DEFAULT 'tms',
   position    integer     NOT NULL,
   part        text        NOT NULL,
   type        text        NOT NULL,
@@ -23,6 +24,7 @@ CREATE TABLE IF NOT EXISTS questions (
 );
 
 -- ── 2. Survey responses table (v2 – JSONB answers) ────────
+-- company: tms | ellimetal (tenant; separates admin views and public survey routes)
 -- answers JSONB stores per-question values plus optional dimension grids:
 --   A1, A2          → { oe, pl, ki } totals (admin/CSV)
 --   A1_dims, A2_dims → full 5×3 grid { belofte..relatie: { CI, OE, PL } } (consolidatie)
@@ -31,8 +33,15 @@ CREATE TABLE IF NOT EXISTS survey_responses (
   created_at  timestamptz NOT NULL DEFAULT now(),
   naam        text,
   mode        text,
+  company     text        NOT NULL DEFAULT 'tms',
   answers     jsonb       NOT NULL DEFAULT '{}'::jsonb
 );
+
+-- ── 2b. Multi-company columns (safe to re-run on existing DB) ─
+ALTER TABLE questions        ADD COLUMN IF NOT EXISTS company text NOT NULL DEFAULT 'tms';
+ALTER TABLE survey_responses ADD COLUMN IF NOT EXISTS company text NOT NULL DEFAULT 'tms';
+ALTER TABLE questions DROP CONSTRAINT IF EXISTS questions_q_id_key;
+CREATE UNIQUE INDEX IF NOT EXISTS questions_company_q_id_idx ON questions (company, q_id);
 
 -- ── 3. Row Level Security ─────────────────────────────────
 ALTER TABLE questions        ENABLE ROW LEVEL SECURITY;
@@ -149,7 +158,95 @@ VALUES
  'Zodat we bij de bespreking de juiste context hebben (optioneel).',
  NULL, NULL, NULL, NULL, 'Naam · rol', true)
 
-ON CONFLICT (q_id) DO NOTHING;
+ON CONFLICT (company, q_id) DO NOTHING;
+
+-- ── 4b. Seed: Ellimetal questions (same structure, Ellimetal copy) ─
+INSERT INTO questions (company, q_id, position, part, type, q, help, opts, items, lo, hi, ph, core)
+VALUES
+
+('ellimetal', 'A1', 1, 'A', 'alloc',
+ 'Hoe concurreert en wint Ellimetal <em class="k">vandaag</em> écht?',
+ 'Beoordeel vijf dimensies. Verdeel per dimensie 20 punten over de drie uitspraken.',
+ NULL, NULL, NULL, NULL, NULL, true),
+
+('ellimetal', 'A2', 2, 'A', 'alloc',
+ 'Hoe zou Ellimetal over <em class="k">3 jaar</em> moeten concurreren?',
+ 'Beoordeel vijf dimensies. Verdeel per dimensie 20 punten over de drie uitspraken.',
+ NULL, NULL, NULL, NULL, NULL, true),
+
+('ellimetal', 'A3', 3, 'A', 'single',
+ 'Eén discipline kan dominant zijn. Welke moet dat voor Ellimetal zijn?',
+ NULL,
+ '[["oe","Operationele excellentie"],["pl","Productleiderschap"],["ki","Klantintimiteit"]]',
+ NULL, NULL, NULL, NULL, true),
+
+('ellimetal', 'A4', 4, 'A', 'single',
+ 'Op welke discipline aanvaarden we bewust "enkel marktstandaard"?',
+ 'Goed genoeg, geen koploper.',
+ '[["oe","Operationele excellentie"],["pl","Productleiderschap"],["ki","Klantintimiteit"]]',
+ NULL, NULL, NULL, NULL, true),
+
+('ellimetal', 'B1', 5, 'B', 'multi2',
+ '"Een klant kiest voor Ellimetal vooral omdat…"',
+ 'Kies je top 2.',
+ '[["a","we betrouwbaar, veilig en vlot leveren tegen een scherpe prijs"],["b","we hun installatie en proces beter kennen dan wie ook"],["c","we technisch het meest geavanceerd zijn / het complexe aankunnen"],["d","we snel mensen beschikbaar hebben"]]',
+ NULL, NULL, NULL, NULL, false),
+
+('ellimetal', 'B2', 6, 'B', 'single',
+ 'Detachering / "outsourcing" sturen we het best op:',
+ NULL,
+ '[["a","bezettingsgraad, fill rate, kost-per-uur"],["b","diepte en duur van de klantrelatie, herhaalopdrachten, kennisopbouw bij de klant"],["c","de moeilijkheidsgraad en specialisatie van de geplaatste profielen"]]',
+ NULL, NULL, NULL, NULL, true),
+
+('ellimetal', 'B3', 7, 'B', 'single',
+ 'De grootste groei de komende 2 jaar komt vooral uit:',
+ NULL,
+ '[["a","nieuwe klanten in nieuwe markten"],["b","uitbreiding en consolidatie bij bestaande klanten"],["c","nieuwe klanten via een scherp geprijsd, schaalbaar standaardaanbod"]]',
+ NULL, NULL, NULL, NULL, true),
+
+('ellimetal', 'B4', 8, 'B', 'single',
+ 'Een trouwe klant vraagt een complexe klus tegen dunne marge om de relatie te onderhouden. We…',
+ NULL,
+ '[["a","houden onze prijs/marge aan, ook als we de klus mislopen"],["b","nemen het als investering in de relatie"],["c","nemen het enkel als het technisch uitdagend of referentiewaardig is"]]',
+ NULL, NULL, NULL, NULL, false),
+
+('ellimetal', 'B5', 9, 'B', 'rank',
+ 'Waarin moet Ellimetal de komende jaren het meest investeren?',
+ 'Tik in volgorde van belang — 1 is het belangrijkst.',
+ NULL,
+ '[["p","Processen, efficiëntie, prijs- en kostenstructuur"],["k","Kennisopbouw over klanten, accountteams, relatiemanagement, managed services"],["r","Technische R&D, nieuwe methodes, specialisatie"]]',
+ NULL, NULL, NULL, false),
+
+('ellimetal', 'C1', 10, 'C', 'text',
+ 'In één zin: waarom kiest een klant voor Ellimetal en niet voor een concurrent?',
+ NULL, NULL, NULL, NULL, NULL, 'Typ je antwoord…', true),
+
+('ellimetal', 'C2', 11, 'C', 'text',
+ 'Wat zou Ellimetal bewust <em class="k">níét</em> (meer) moeten doen?',
+ NULL, NULL, NULL, NULL, NULL, 'Typ je antwoord…', true),
+
+('ellimetal', 'C3', 12, 'C', 'text',
+ 'Welke (soort) concurrent vrees je het meest, en waarom?',
+ NULL, NULL, NULL, NULL, NULL, 'Typ je antwoord…', false),
+
+('ellimetal', 'C4', 13, 'C', 'text',
+ 'Als Ellimetal over 3 jaar om één ding bekend zou staan — wat zou dat zijn?',
+ NULL, NULL, NULL, NULL, NULL, 'Typ je antwoord…', false),
+
+('ellimetal', 'D1', 14, 'D', 'scale',
+ 'Hoe sterk denk je dat de rest van StratCom het met jouw antwoorden eens is?',
+ NULL, NULL, NULL, 'totaal niet', 'volledig', NULL, true),
+
+('ellimetal', 'D2', 15, 'D', 'scale',
+ 'Hoe duidelijk is de strategische positionering van Ellimetal vandaag, voor jou?',
+ NULL, NULL, NULL, 'heel onduidelijk', 'heel duidelijk', NULL, false),
+
+('ellimetal', 'naam', 16, 'D', 'name',
+ 'Tot slot — je naam en rol',
+ 'Zodat we bij de bespreking de juiste context hebben (optioneel).',
+ NULL, NULL, NULL, NULL, 'Naam · rol', true)
+
+ON CONFLICT (company, q_id) DO NOTHING;
 
 -- ── 5. Admin user ─────────────────────────────────────────
 -- Create the admin account via Supabase Dashboard:

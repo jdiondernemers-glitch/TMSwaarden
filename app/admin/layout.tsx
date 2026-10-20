@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase-server'
 import AdminNav from './nav'
 
@@ -12,7 +13,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {user && <AdminNav userEmail={user.email ?? ''} />}
+      {user && (
+        <Suspense fallback={<div className="h-16 bg-white border-b border-gray-200" />}>
+          <AdminNav userEmail={user.email ?? ''} />
+        </Suspense>
+      )}
       <main className={user ? 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8' : ''}>
         {children}
       </main>

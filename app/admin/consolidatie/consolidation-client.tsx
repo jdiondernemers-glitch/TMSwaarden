@@ -9,9 +9,10 @@ import type { AllocSource, SurveyResponseRow } from '@/lib/consolidation-types'
 interface Props {
   rows: SurveyResponseRow[]
   fetchError?: string | null
+  eyebrowLabel?: string
 }
 
-export default function ConsolidationClient({ rows, fetchError }: Props) {
+export default function ConsolidationClient({ rows, fetchError, eyebrowLabel }: Props) {
   const [source, setSource] = useState<AllocSource>('A1')
   const router = useRouter()
 
@@ -72,7 +73,7 @@ export default function ConsolidationClient({ rows, fetchError }: Props) {
           {skipped} oudere inzending{skipped === 1 ? '' : 'en'} zonder dimensiedata niet meegenomen.
         </p>
       )}
-      <ConsolidationDashboard people={people} />
+      <ConsolidationDashboard people={people} eyebrowLabel={eyebrowLabel} />
     </div>
   )
 }

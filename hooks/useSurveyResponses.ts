@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import type { SurveyResponseRow } from '@/lib/consolidation-types'
+import type { CompanyId } from '@/lib/survey-companies'
 
-export function useSurveyResponses() {
+export function useSurveyResponses(company: CompanyId = 'tms') {
   const [rows, setRows] = useState<SurveyResponseRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -16,6 +17,7 @@ export function useSurveyResponses() {
     const { data, error: err } = await supabase
       .from('survey_responses')
       .select('id, naam, answers, created_at, mode')
+      .eq('company', company)
       .order('created_at', { ascending: false })
 
     if (err) {
@@ -25,7 +27,7 @@ export function useSurveyResponses() {
       setRows((data ?? []) as SurveyResponseRow[])
     }
     setLoading(false)
-  }, [supabase])
+  }, [supabase, company])
 
   useEffect(() => {
     refetch()

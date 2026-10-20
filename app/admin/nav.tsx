@@ -1,14 +1,18 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
+import { adminHref, parseCompanyParam } from '@/lib/survey-companies'
+import CompanySwitcher from './CompanySwitcher'
 
 const MONO_R = '/tms-logo.png'
 
 export default function AdminNav({ userEmail }: { userEmail: string }) {
   const path = usePathname()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const company = parseCompanyParam(searchParams.get('company'))
   const supabase = createClient()
 
   async function logout() {
@@ -32,16 +36,17 @@ export default function AdminNav({ userEmail }: { userEmail: string }) {
             <img src={MONO_R} alt="TMS" className="h-6" />
             <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Admin</span>
             <div className="flex gap-1">
-              <Link href="/admin/dashboard" className={linkClass('/admin/dashboard')}>
+              <Link href={adminHref('/admin/dashboard', company)} className={linkClass('/admin/dashboard')}>
                 Antwoorden
               </Link>
-              <Link href="/admin/consolidatie" className={linkClass('/admin/consolidatie')}>
+              <Link href={adminHref('/admin/consolidatie', company)} className={linkClass('/admin/consolidatie')}>
                 Consolidatie
               </Link>
-              <Link href="/admin/questions" className={linkClass('/admin/questions')}>
+              <Link href={adminHref('/admin/questions', company)} className={linkClass('/admin/questions')}>
                 Vragen
               </Link>
             </div>
+            <CompanySwitcher />
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-500 hidden sm:block">{userEmail}</span>

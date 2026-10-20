@@ -3,7 +3,9 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
+import { COMPANIES, parseCompanyParam } from '@/lib/survey-companies'
 
 interface Question { q_id: string; q: string; type: string; part: string; opts?: [string,string][]; items?: [string,string][] }
 interface Response  { id: string; created_at: string; naam: string | null; mode: string | null; answers: Record<string, unknown> }
@@ -44,6 +46,8 @@ function displayName(r: Response): string {
 }
 
 export default function DashboardPage() {
+  const searchParams = useSearchParams()
+  const company = parseCompanyParam(searchParams.get('company'))
   const [responses, setResponses] = useState<Response[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading]     = useState(true)
@@ -52,16 +56,17 @@ export default function DashboardPage() {
   const supabase = createClient()
 
   useEffect(() => {
+    setLoading(true)
     Promise.all([
-      supabase.from('survey_responses').select('*').order('created_at', { ascending: false }),
-      supabase.from('questions').select('q_id,q,type,part,opts,items').order('position'),
+      supabase.from('survey_responses').select('*').eq('company', company).order('created_at', { ascending: false }),
+      supabase.from('questions').select('q_id,q,type,part,opts,items').eq('company', company).order('position'),
     ]).then(([{ data: r }, { data: q }]) => {
       if (r) setResponses(r as Response[])
       if (q) setQuestions(q as Question[])
       setLoading(false)
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [company])
 
   function exportCSV() {
     const qIds = questions.map(q => q.q_id)
@@ -81,7 +86,7 @@ export default function DashboardPage() {
     const csv = [header, ...rows].join('\n')
     const a = document.createElement('a')
     a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }))
-    a.download = `TMS-responses-${new Date().toISOString().slice(0,10)}.csv`
+    a.download = `${company}-responses-${new Date().toISOString().slice(0, 10)}.csv`
     document.body.appendChild(a); a.click(); document.body.removeChild(a)
   }
 
@@ -110,7 +115,7 @@ export default function DashboardPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#092147]">Antwoorden</h1>
+          <h1 className="text-2xl font-bold text-[#092147]">Antwoorden · {COMPANIES[company].label}</h1>
           <p className="text-gray-500 text-sm mt-0.5">{responses.length} {responses.length === 1 ? 'inzending' : 'inzendingen'}</p>
         </div>
         {responses.length > 0 && (

@@ -3,7 +3,9 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
+import { COMPANIES, parseCompanyParam } from '@/lib/survey-companies'
 
 type Part   = 'A' | 'B' | 'C' | 'D'
 type QType  = 'alloc' | 'single' | 'multi2' | 'rank' | 'text' | 'scale' | 'name'
@@ -47,6 +49,8 @@ const TYPE_LABELS: Record<QType, string> = {
 }
 
 export default function QuestionsPage() {
+  const searchParams = useSearchParams()
+  const company = parseCompanyParam(searchParams.get('company'))
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading]     = useState(true)
   const [modal, setModal]         = useState<'add' | 'edit' | null>(null)
@@ -57,12 +61,13 @@ export default function QuestionsPage() {
   const supabase = createClient()
 
   async function load() {
-    const { data } = await supabase.from('questions').select('*').order('position')
+    setLoading(true)
+    const { data } = await supabase.from('questions').select('*').eq('company', company).order('position')
     if (data) setQuestions(data as Question[])
     setLoading(false)
   }
 
-  useEffect(() => { load() }, []) // eslint-disable-line
+  useEffect(() => { load() }, [company]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function openAdd() {
     const maxPos = questions.reduce((m, q) => Math.max(m, q.position), 0)
@@ -105,6 +110,7 @@ export default function QuestionsPage() {
       ph: (draft.type === 'text' || draft.type === 'name') ? draft.ph : null,
       core: draft.core,
       active: draft.active,
+      company,
     }
 
     if (modal === 'add') {
@@ -182,7 +188,7 @@ export default function QuestionsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#092147]">Survey vragen</h1>
+          <h1 className="text-2xl font-bold text-[#092147]">Survey vragen · {COMPANIES[company].label}</h1>
           <p className="text-gray-500 text-sm mt-0.5">{questions.filter(q=>q.active).length} actief, {questions.filter(q=>!q.active).length} inactief</p>
         </div>
         <button

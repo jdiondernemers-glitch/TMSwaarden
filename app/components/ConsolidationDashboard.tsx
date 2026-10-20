@@ -81,9 +81,10 @@ function StackBar({ vals, denom, h = 12 }: { vals: Totals; denom: number; h?: nu
 
 interface Props {
   people: Person[]
+  eyebrowLabel?: string
 }
 
-export default function ConsolidationDashboard({ people }: Props) {
+export default function ConsolidationDashboard({ people, eyebrowLabel = 'TMS · Waardestrategie' }: Props) {
   const [selected, setSelected] = useState<number | null>(null)
   const [hovered, setHovered] = useState<number | null>(null)
 
@@ -203,7 +204,7 @@ export default function ConsolidationDashboard({ people }: Props) {
       <div className="dash-in">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
           <div>
-            <div className="eyebrow">TMS · Waardestrategie</div>
+            <div className="eyebrow">{eyebrowLabel}</div>
             <h1 style={{ color: '#fff', fontSize: 26, fontWeight: 800, margin: '6px 0 4px', lineHeight: 1.1 }}>
               Teamconsolidatie
             </h1>
