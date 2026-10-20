@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import type { SurveyDisciplineColors } from '@/lib/survey-companies'
 import {
   BUDGET,
   DIMENSIONS,
@@ -19,6 +20,7 @@ interface Props {
   grid: DimGrid
   profile: SurveyAlloc
   profileTitle?: string
+  disciplineColors?: SurveyDisciplineColors
   onGridChange: (grid: DimGrid) => void
 }
 
@@ -29,7 +31,17 @@ const FLAG_COLORS = {
   muted: 'var(--lightblue)',
 } as const
 
-export default function DimensionAllocInputs({ grid, profile, profileTitle = 'Jouw TMS-profiel', onGridChange }: Props) {
+export default function DimensionAllocInputs({
+  grid,
+  profile,
+  profileTitle = 'Jouw TMS-profiel',
+  disciplineColors,
+  onGridChange,
+}: Props) {
+  const disciplines = DISCIPLINES.map(d => ({
+    ...d,
+    color: disciplineColors?.[d.key as DiscKey] ?? d.color,
+  }))
   const leaderInfo = useMemo(() => computeLeader(profile), [profile])
 
   const handleSetVal = (dimKey: DimKey, discKey: DiscKey, value: number) => {
@@ -65,7 +77,7 @@ export default function DimensionAllocInputs({ grid, profile, profileTitle = 'Jo
               </div>
               <p className="dim-help">{d.help}</p>
 
-              {DISCIPLINES.map((di, stmtIdx) => {
+              {disciplines.map((di, stmtIdx) => {
                 const val = grid[d.key][di.key]
                 const pct = (val / BUDGET) * 100
                 return (
@@ -126,7 +138,7 @@ export default function DimensionAllocInputs({ grid, profile, profileTitle = 'Jo
             </span>
           </div>
 
-          {DISCIPLINES.map(di => {
+          {disciplines.map(di => {
             const score =
               di.key === 'CI' ? profile.ki : di.key === 'OE' ? profile.oe : profile.pl
             const isLeader = leaderInfo.total >= 100 && di.key === leaderInfo.leader.key
@@ -167,7 +179,7 @@ export default function DimensionAllocInputs({ grid, profile, profileTitle = 'Jo
               <div key={d.key} className="dims-breakdown-row">
                 <span className="dims-breakdown-short">{d.short}</span>
                 <div className="dims-breakdown-bar">
-                  {DISCIPLINES.map(di => (
+                  {disciplines.map(di => (
                     <div
                       key={di.key}
                       className="dims-breakdown-seg"

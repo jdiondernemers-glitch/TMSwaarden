@@ -144,6 +144,34 @@ textarea:focus{border-color:var(--navy)}
 }
 :focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:8px}
 
+/* ── Ellimetal branding (ellimetal.com palette) ── */
+.app[data-company="ellimetal"]{
+  --navy:#002e4e;
+  --navycard:#004c81;
+  --red:#006ab4;
+  --teal:#0d95e8;
+  --sage:#7eb8e0;
+  --lime:#e8f4fc;
+  --off:#f4f7fa;
+  --lightblue:#b6c0d3;
+  --grey:#566072;
+  --line:#dce3ec;
+  --accent:var(--red);
+  --accent-soft:rgba(0,106,180,.09);
+}
+.app[data-company="ellimetal"] .back:hover{background:rgba(0,46,78,.06)}
+.app[data-company="ellimetal"] .prog{background:rgba(0,46,78,.12)}
+.app[data-company="ellimetal"] .abar{background:rgba(0,46,78,.08)}
+.app[data-company="ellimetal"] .total .badge{background:rgba(0,46,78,.07)}
+.app[data-company="ellimetal"] .total.ok .badge{background:rgba(13,149,232,.16);color:#006ab4}
+.app[data-company="ellimetal"] .total.over .badge{background:rgba(0,106,180,.12);color:#006ab4}
+.app[data-company="ellimetal"] .keyhint b{background:rgba(0,46,78,.07)}
+.app[data-company="ellimetal"] .btn-primary{box-shadow:0 4px 18px rgba(0,106,180,.35)}
+.app[data-company="ellimetal"] .btn-primary:hover{background:#0088d4;box-shadow:0 6px 24px rgba(0,106,180,.45)}
+.app[data-company="ellimetal"] .btn-primary:active{box-shadow:0 2px 10px rgba(0,106,180,.3)}
+.app[data-company="ellimetal"] .hero-mono{height:44px}
+.app[data-company="ellimetal"] .brand-mono{height:28px}
+
 /* ── Five-dimension alloc scoring ── */
 .dims-layout{display:flex;gap:18px;align-items:flex-start;margin-top:4px}
 .dims-main{flex:1 1 60%;min-width:0;display:flex;flex-direction:column;gap:14px}

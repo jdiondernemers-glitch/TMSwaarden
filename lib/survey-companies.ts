@@ -1,5 +1,21 @@
 export type CompanyId = 'tms' | 'ellimetal'
 
+/** Treacy discipline dot colors on intro (oe / pl / ki) */
+export type SurveyDiscDots = { oe: string; pl: string; ki: string }
+
+export type SurveyPartColors = { A: string; B: string; C: string; D: string }
+
+/** CI / OE / PL slider colors in dimension scoring */
+export type SurveyDisciplineColors = { CI: string; OE: string; PL: string }
+
+export type SurveyTheme = {
+  partColors: SurveyPartColors
+  discDots: SurveyDiscDots
+  disciplineColors: SurveyDisciplineColors
+  heroAccent: string
+  statusSuccess: string
+}
+
 export type CompanyConfig = {
   id: CompanyId
   label: string
@@ -13,6 +29,24 @@ export type CompanyConfig = {
   doneHelp: string
   profileTitle: string
   consolidationEyebrow: string
+  theme: SurveyTheme
+}
+
+const TMS_THEME: SurveyTheme = {
+  partColors: { A: '#CD0039', B: '#39B2AD', C: '#092147', D: '#8FAE73' },
+  discDots: { oe: '#092147', pl: '#39B2AD', ki: '#CD0039' },
+  disciplineColors: { CI: '#B1CF99', OE: '#39B2AD', PL: '#CD0039' },
+  heroAccent: '#CD0039',
+  statusSuccess: '#39B2AD',
+}
+
+/** Colors aligned with ellimetal.com theme (blues + industrial grey) */
+const ELLIMETAL_THEME: SurveyTheme = {
+  partColors: { A: '#006ab4', B: '#0d95e8', C: '#002e4e', D: '#566072' },
+  discDots: { oe: '#002e4e', pl: '#006ab4', ki: '#0d95e8' },
+  disciplineColors: { CI: '#0d95e8', OE: '#002e4e', PL: '#006ab4' },
+  heroAccent: '#006ab4',
+  statusSuccess: '#0d95e8',
 }
 
 export const COMPANIES: Record<CompanyId, CompanyConfig> = {
@@ -30,6 +64,7 @@ export const COMPANIES: Record<CompanyId, CompanyConfig> = {
       'Je antwoorden zijn klaar. We bespreken de geaggregeerde resultaten samen binnen StratCom.',
     profileTitle: 'Jouw TMS-profiel',
     consolidationEyebrow: 'TMS · Waardestrategie',
+    theme: TMS_THEME,
   },
   ellimetal: {
     id: 'ellimetal',
@@ -45,6 +80,7 @@ export const COMPANIES: Record<CompanyId, CompanyConfig> = {
       'Je antwoorden zijn klaar. We bespreken de geaggregeerde resultaten samen in het team.',
     profileTitle: 'Jouw Ellimetal-profiel',
     consolidationEyebrow: 'Ellimetal · Waardestrategie',
+    theme: ELLIMETAL_THEME,
   },
 }
 

@@ -41,17 +41,17 @@ type AllocVal = { oe: number | ''; pl: number | ''; ki: number | '' }
 type Answers  = Record<string, string | number | string[] | AllocVal>
 
 // ── Static data ────────────────────────────────────────────────────────────
-const DISC = {
-  oe: { label: 'Operationele excellentie', dot: '#092147', desc: 'Betrouwbaar, vlot, scherp geprijsd. Maximaal gemak en voorspelbaarheid.' },
-  pl: { label: 'Productleiderschap',       dot: '#39B2AD', desc: 'De beste, meest geavanceerde oplossing. Voorop in vakmanschap.' },
-  ki: { label: 'Klantintimiteit',          dot: '#CD0039', desc: 'De klant en zijn installatie door en door kennen. Maatwerk, partnerschap.' },
+const DISC_LABELS = {
+  oe: { label: 'Operationele excellentie', desc: 'Betrouwbaar, vlot, scherp geprijsd. Maximaal gemak en voorspelbaarheid.' },
+  pl: { label: 'Productleiderschap', desc: 'De beste, meest geavanceerde oplossing. Voorop in vakmanschap.' },
+  ki: { label: 'Klantintimiteit', desc: 'De klant en zijn installatie door en door kennen. Maatwerk, partnerschap.' },
 } as const
 
-const PART: Record<string, { name: string; color: string }> = {
-  A: { name: 'Deel A \u00b7 Vandaag vs. ambitie',       color: '#CD0039' },
-  B: { name: 'Deel B \u00b7 Hoe we winnen en kiezen',   color: '#39B2AD' },
-  C: { name: 'Deel C \u00b7 In je eigen woorden',       color: '#092147' },
-  D: { name: 'Deel D \u00b7 Afstemming',                color: '#8FAE73' },
+const PART_NAMES: Record<string, string> = {
+  A: 'Deel A \u00b7 Vandaag vs. ambitie',
+  B: 'Deel B \u00b7 Hoe we winnen en kiezen',
+  C: 'Deel C \u00b7 In je eigen woorden',
+  D: 'Deel D \u00b7 Afstemming',
 }
 
 // ── Small SVG icon components ──────────────────────────────────────────────
@@ -259,6 +259,7 @@ function NameInput({ q, answers, setAnswer, inputRef }: {
 // ── Main component ─────────────────────────────────────────────────────────
 export default function SurveyPage({ company }: { company: CompanyId }) {
   const cfg = COMPANIES[company]
+  const theme = cfg.theme
   const [questions, setQuestions]   = useState<Question[]>([])
   const [loading, setLoading]       = useState(true)
   const [mode, setMode]             = useState<Mode>('full')
@@ -316,10 +317,11 @@ export default function SurveyPage({ company }: { company: CompanyId }) {
 
   // Set CSS accent variable
   useEffect(() => {
-    const color = isHero ? '#CD0039' : (currentQ ? PART[currentQ.part]?.color : '#CD0039') ?? '#CD0039'
+    const partColor = currentQ ? theme.partColors[currentQ.part as keyof typeof theme.partColors] : undefined
+    const color = isHero ? theme.heroAccent : partColor ?? theme.heroAccent
     document.documentElement.style.setProperty('--accent', color)
     document.documentElement.style.setProperty('--accent-soft', `rgba(${hexRGB(color)},.09)`)
-  }, [currentId, questions])
+  }, [currentId, questions, theme])
 
   const setAnswer = useCallback((qId: string, value: Answers[string]) => {
     setAnswers(prev => ({ ...prev, [qId]: value }))
@@ -338,12 +340,12 @@ export default function SurveyPage({ company }: { company: CompanyId }) {
         console.error('Supabase insert error:', error.code, error.message, error.details)
         setDbStatus({ msg: `\u26a0 Opslaan mislukt (${error.code ?? error.message}) \u2013 gebruik "Kopieer" als back-up.`, color: '#FF6B6B' })
       } else {
-        setDbStatus({ msg: '\u2713 Antwoorden opgeslagen', color: '#39B2AD' })
+        setDbStatus({ msg: '\u2713 Antwoorden opgeslagen', color: theme.statusSuccess })
       }
     } catch {
       setDbStatus({ msg: '\u26a0 Opslaan mislukt \u2013 gebruik "Kopieer" als back-up.', color: '#FF6B6B' })
     }
-  }, [questions, supabase, company])
+  }, [questions, supabase, company, theme.statusSuccess])
 
   const advance = useCallback(() => {
     setPos(currentPos => {
@@ -426,7 +428,7 @@ export default function SurveyPage({ company }: { company: CompanyId }) {
 
   // ── Render ──────────────────────────────────────────────────────────────
   return (
-    <div className={`app${isHero ? ' hero' : ''}`}>
+    <div className={`app${isHero ? ' hero' : ''}`} data-company={company}>
       <div className="shape" aria-hidden="true" />
 
       <header className="topbar" style={{ visibility: isIntro ? 'hidden' : 'visible' }}>
@@ -447,9 +449,9 @@ export default function SurveyPage({ company }: { company: CompanyId }) {
               <h1 className="q">{cfg.surveyTitle}</h1>
               <p className="help">{cfg.introHelp}</p>
               <div className="disc-list">
-                {(Object.entries(DISC) as [keyof typeof DISC, typeof DISC[keyof typeof DISC]][]).map(([, d]) => (
+                {(Object.entries(DISC_LABELS) as [keyof typeof DISC_LABELS, typeof DISC_LABELS[keyof typeof DISC_LABELS]][]).map(([key, d]) => (
                   <div key={d.label} className="disc">
-                    <span className="dot" style={{ background: d.dot }} />
+                    <span className="dot" style={{ background: theme.discDots[key] }} />
                     <span><b>{d.label}</b> &mdash; {d.desc}</span>
                   </div>
                 ))}
@@ -507,7 +509,7 @@ export default function SurveyPage({ company }: { company: CompanyId }) {
             <div className={`wrap reveal${currentQ.type === 'alloc' ? ' wrap-dims' : ''}`}>
               <p className="eyebrow">
                 <span className="qn">{currentQ.q_id.toUpperCase()}</span>
-                {PART[currentQ.part]?.name}
+                {PART_NAMES[currentQ.part]}
               </p>
               <h2 className="q" dangerouslySetInnerHTML={{ __html: currentQ.q }} />
               {currentQ.help && <p className="help">{currentQ.help}</p>}
@@ -526,6 +528,7 @@ export default function SurveyPage({ company }: { company: CompanyId }) {
                   grid={currentDimGrid ?? emptyGrid()}
                   profile={currentProfile}
                   profileTitle={cfg.profileTitle}
+                  disciplineColors={theme.disciplineColors}
                   onGridChange={grid => handleDimGridChange(currentQ.q_id, grid)}
                 />
               )}

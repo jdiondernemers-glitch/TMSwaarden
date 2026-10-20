@@ -205,7 +205,7 @@ VALUES
  NULL, NULL, NULL, NULL, true),
 
 ('ellimetal', 'B4', 8, 'B', 'single',
- 'Een trouwe klant vraagt een complexe klus tegen dunne marge om de relatie te onderhouden. We…',
+ 'Een trouwe klant vraagt een complexe klus tegen dunne marge om de relatie te onderhouden (Olympisch minimum). We…',
  NULL,
  '[["a","houden onze prijs/marge aan, ook als we de klus mislopen"],["b","nemen het als investering in de relatie"],["c","nemen het enkel als het technisch uitdagend of referentiewaardig is"]]',
  NULL, NULL, NULL, NULL, false),
@@ -247,6 +247,11 @@ VALUES
  NULL, NULL, NULL, NULL, 'Naam · rol', true)
 
 ON CONFLICT (company, q_id) DO NOTHING;
+
+-- Ellimetal vraag B4 (8b): bestaande rij bijwerken na seed
+UPDATE questions
+SET q = 'Een trouwe klant vraagt een complexe klus tegen dunne marge om de relatie te onderhouden (Olympisch minimum). We…'
+WHERE company = 'ellimetal' AND q_id = 'B4';
 
 -- ── 5. Admin user ─────────────────────────────────────────
 -- Create the admin account via Supabase Dashboard:
